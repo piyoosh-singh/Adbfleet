@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentDialog
+    x:Class="AdbFleet.Views.ConnectDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Connect over Wi-Fi"
+    CloseButtonText="Done"
+    DefaultButton="None">
+
+    <ScrollViewer MaxHeight="560" Width="440">
+        <StackPanel Spacing="20" Padding="0,0,12,0">
+            <StackPanel Spacing="8">
+                <TextBlock Text="Connect to an address" Style="{StaticResource SectionTitle}" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="Enter the device's IP address. Port 5555 is used when you leave it out. You can connect as many devices as you like; each one is added to the list." />
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <AutoSuggestBox x:Name="HostBox" PlaceholderText="192.168.1.20 or 192.168.1.20:5555"
+                                    TextChanged="HostBox_TextChanged" QuerySubmitted="HostBox_QuerySubmitted" GotFocus="HostBox_GotFocus" />
+                    <Button Grid.Column="1" Content="Connect" Style="{StaticResource AccentButtonStyle}" Click="Connect_Click" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <TextBlock Text="Pair a new device (Android 11 or later)" Style="{StaticResource SectionTitle}" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="On the device open Developer options, then Wireless debugging, then Pair device with pairing code. Enter the address and code it shows. After pairing, connect using the address shown under Wireless debugging." />
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="PairHostBox" PlaceholderText="192.168.1.20:37099" />
+                    <TextBox x:Name="PairCodeBox" Grid.Column="1" PlaceholderText="6-digit code" MaxLength="6" />
+                    <Button Grid.Column="2" Content="Pair" Click="Pair_Click" />
+                </Grid>
+            </StackPanel>
+
+            <StackPanel Spacing="8">
+                <Grid>
+                    <TextBlock Text="Devices on this network" Style="{StaticResource SectionTitle}" VerticalAlignment="Center" />
+                    <Button HorizontalAlignment="Right" Content="Search" Click="Scan_Click" />
+                </Grid>
+                <TextBlock Style="{StaticResource Hint}" Text="Finds devices with Wireless debugging turned on (Android 11 or later). Select one to fill in its address." />
+                <ListView x:Name="FoundList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="Found_ItemClick" MaxHeight="160" />
+            </StackPanel>
+
+            <InfoBar x:Name="Status" IsOpen="False" IsClosable="True" />
+        </StackPanel>
+    </ScrollViewer>
+</ContentDialog>

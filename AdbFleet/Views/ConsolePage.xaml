@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="AdbFleet.Views.ConsolePage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:m="using:AdbFleet.Models"
+    xmlns:local="using:AdbFleet.Views"
+    NavigationCacheMode="Required">
+
+    <Grid Padding="24,4,24,16" RowSpacing="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Grid ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <SelectorBar x:Name="ModeBar" SelectionChanged="ModeBar_SelectionChanged">
+                <SelectorBarItem Text="Activity" Tag="activity" IsSelected="True" />
+                <SelectorBarItem Text="Logcat" Tag="logcat" />
+            </SelectorBar>
+
+            <!-- Activity toolbar -->
+            <StackPanel x:Name="ActivityBar" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                <TextBox x:Name="ActivityFilter" PlaceholderText="Filter" Width="220" TextChanged="ActivityFilter_TextChanged" />
+                <Button Content="Copy" Click="CopyActivity_Click" />
+                <Button Content="Open log folder" Click="OpenLogs_Click" />
+                <Button Content="Clear" Click="ClearActivity_Click" />
+            </StackPanel>
+
+            <!-- Logcat toolbar -->
+            <StackPanel x:Name="LogcatBar" Grid.Column="1" VerticalAlignment="Center" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Visibility="Collapsed">
+                <ComboBox x:Name="LogcatLevel" SelectedIndex="0" Width="130">
+                    <ComboBoxItem Content="All levels" Tag="V" />
+                    <ComboBoxItem Content="Debug and up" Tag="D" />
+                    <ComboBoxItem Content="Info and up" Tag="I" />
+                    <ComboBoxItem Content="Warnings" Tag="W" />
+                    <ComboBoxItem Content="Errors" Tag="E" />
+                </ComboBox>
+                <TextBox x:Name="LogcatFilter" PlaceholderText="Filter text or tag" Width="200" TextChanged="LogcatFilter_TextChanged" />
+                <CheckBox x:Name="LogcatToFile" Content="Save to file" MinWidth="0" />
+                <Button x:Name="LogcatStart" Content="Start" Style="{StaticResource AccentButtonStyle}" Click="LogcatStart_Click" />
+                <Button Content="Clear" Click="LogcatClear_Click" />
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="1" Style="{StaticResource Panel}" Padding="4">
+            <Grid>
+                <ListView x:Name="ActivityList" SelectionMode="Extended" IsItemClickEnabled="False">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                            <Setter Property="MinHeight" Value="24" />
+                            <Setter Property="Padding" Value="8,1" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="m:LogEntry">
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="58" />
+                                    <ColumnDefinition Width="150" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Bind TimeText}" FontFamily="{StaticResource MonoFont}" FontSize="12" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                <TextBlock Grid.Column="1" Text="{x:Bind Source}" Foreground="{x:Bind SourceBrush}" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="2" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="Wrap"
+                                           Foreground="{x:Bind TextBrush}" FontWeight="{x:Bind Weight}" IsTextSelectionEnabled="True">
+                                    <Run Text="{x:Bind Prefix}" /><Run Text="{x:Bind Text}" />
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <ListView x:Name="LogcatList" SelectionMode="Extended" Visibility="Collapsed">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                            <Setter Property="MinHeight" Value="20" />
+                            <Setter Property="Padding" Value="8,0" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:LogcatLine">
+                            <TextBlock Text="{x:Bind Text}" Foreground="{x:Bind Brush}" FontFamily="{StaticResource MonoFont}" FontSize="12" TextWrapping="NoWrap" />
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <TextBlock x:Name="LogcatEmpty" Visibility="Collapsed" Style="{StaticResource Hint}" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Text="Select Start to stream the system log of the selected device." />
+            </Grid>
+        </Border>
+
+        <!-- Command line -->
+        <Grid x:Name="CommandRow" Grid.Row="2" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="adb" FontFamily="{StaticResource MonoFont}" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            <AutoSuggestBox x:Name="CommandBox" Grid.Column="1" FontFamily="{StaticResource MonoFont}"
+                            PlaceholderText="shell pm list packages -3   (runs on every device shown above)"
+                            QuerySubmitted="CommandBox_QuerySubmitted" TextChanged="CommandBox_TextChanged" GotFocus="CommandBox_GotFocus" />
+            <Button Grid.Column="2" Content="Run" Style="{StaticResource AccentButtonStyle}" Click="Run_Click" />
+            <DropDownButton Grid.Column="3" Content="Quick commands">
+                <DropDownButton.Flyout>
+                    <MenuFlyout x:Name="QuickMenu" Opening="QuickMenu_Opening" />
+                </DropDownButton.Flyout>
+            </DropDownButton>
+        </Grid>
+    </Grid>
+</Page>
