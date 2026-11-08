@@ -31,5 +31,11 @@ public partial class App : Application
         Fleet.Window = window;
         window.Activate();
         Fleet.Devices.Start();
+        // adb isn't bundled: on first run, offer to download it or locate an existing copy.
+        if (window.Content is FrameworkElement root)
+            root.Loaded += async (_, _) =>
+            {
+                if (Fleet.Adb.AdbPath == null) await Views.ToolSetup.EnsureAdb();
+            };
     }
 }

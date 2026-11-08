@@ -23,7 +23,7 @@ public sealed partial class ToolsPage : Page
         Fleet.Devices.TargetsChanged += OnTargets;
         var exe = ToolLocator.FindScrcpy();
         ScrcpyStatus.Text = exe == null
-            ? "scrcpy isn't installed yet. Download it from Settings to mirror and control device screens."
+            ? "scrcpy isn't set up yet. Click Mirror screen to download it or choose scrcpy.exe."
             : $"Using {exe}";
         FillPcAddresses();
         BindProxyList(checkAll: true);
@@ -104,6 +104,8 @@ public sealed partial class ToolsPage : Page
     async void Mirror_Click(object sender, RoutedEventArgs e)
     {
         var tag = (sender as FrameworkElement)?.Tag as string ?? "";
+        if (!await ToolSetup.EnsureScrcpy()) return;
+        ScrcpyStatus.Text = $"Using {ToolLocator.FindScrcpy()}";
         var baseArgs = ScrcpyArgs.Text.Trim();
         await Batch.Run(tag == "record" ? "Mirror and record" : tag.Length > 0 ? "Camera" : "Mirror screen", T, d =>
         {

@@ -1,16 +1,16 @@
 # AdbFleet
 
-A WinUI 3 rewrite of ADB AppControl for Windows: manage apps and devices over adb, but on **any number of devices at once**.
+An Android device manager for Windows, built with WinUI 3. Manage apps and devices over adb on **any number of devices at once**: every USB and Wi-Fi device is listed together, and actions run on all checked devices in parallel with a ✓ or ✗ per device. Nothing is installed on the devices.
 
-## What changed from ADB AppControl
+## Download
 
-| ADB AppControl 1.8.6 | AdbFleet |
-| --- | --- |
-| One device at a time; with two or more connected it stops with `CONNECTED 2 DEVICES` | Every USB and Wi-Fi device is listed and usable at the same time |
-| Actions run on the single device | Actions run on every *checked* device in parallel, with a ✓ or ✗ per device |
-| Paid "Extended" features, activation and captcha | No activation; everything is available |
-| Needs the ACBridge helper app on the device | Nothing is installed on the device |
-| WinForms on .NET Framework 4.6.1 | WinUI 3 (Windows App SDK 2.6) on .NET 10 |
+Get the latest `AdbFleet-<version>-portable-win-x64.zip` from [Releases](https://github.com/piyoosh-singh/Adbfleet/releases), unzip it anywhere and run `AdbFleet.exe`. Nothing needs installing: the .NET runtime and Windows App SDK are built in.
+
+AdbFleet doesn't include adb or scrcpy:
+- **adb:** on first launch it offers to download Google's official platform-tools, or to use an `adb.exe` you already have (for example from Android Studio).
+- **scrcpy:** for screen mirroring, it asks the same way the first time you mirror a screen.
+
+Windows SmartScreen may warn about the unsigned exe the first time. Choose *More info → Run anyway*.
 
 ## Features
 
@@ -36,7 +36,7 @@ A WinUI 3 rewrite of ADB AppControl for Windows: manage apps and devices over ad
 - **Apps:** list user, system, disabled and removed apps; search; per-app details. Disable, enable, uninstall (optionally keeping data), restore removed system apps, launch, force stop, clear data, and save APKs (split APKs included). Presets save a selection of packages to reuse on other devices. Removing core system packages asks for confirmation first.
 - **Install:** drag and drop APK, APKS, XAPK (including OBB data) and APKM files, or a folder of split APKs. Options cover replace, downgrade, grant permissions, old target SDK on Android 14+, non-streamed installs and all users. Common install failures are explained in plain language.
 - **Proxy:** each device's global HTTP proxy is read when it connects and when you click ↻. A device using a proxy shows the proxy address in amber under its name. Tools → Proxy lists the proxy for each selected device, removes it, or sets a new one; the address defaults to this PC's IP on the devices' network. Remove proxy is also in the device's ⋯ menu.
-- **Tools:** remote keys including a D-pad for TVs, text input, screenshots, screen mirroring and recording through scrcpy (one window per device), resolution and density changes, reboot modes, and device details.
+- **Tools:** remote keys including a D-pad for TVs, text input, screenshots, screen mirroring and recording through scrcpy (one window per device), resolution and density changes, and reboot modes.
 - **Console:** run any adb command on all target devices at once. Output is colour-coded by device and quick commands can be saved. A live **logcat** view has level and text filters and can save to a file.
 - **Processes:** running processes with memory use, optional auto refresh, and force stop.
 
@@ -58,15 +58,16 @@ dotnet publish -c Release --self-contained true -o ..\publish
 pwsh -File build-portable.ps1
 ```
 
-This produces `dist\AdbFleet\` and `dist\AdbFleet-portable-win-x64.zip` (about 100 MB). The folder contains:
+This produces `dist\AdbFleet\` and `dist\AdbFleet-portable-win-x64.zip`. Pass `-Version 1.2.0` to stamp the version into the exe and the zip name, or `-SingleFile:$false` for a classic multi-file folder. The folder contains:
 - `AdbFleet.exe`: one self-contained file with the .NET runtime and Windows App SDK inside
-- `platform-tools\`: the official Google adb build
-- `scrcpy\`: the latest scrcpy release
 - `portable.txt`: the marker that turns on portable mode
 
-In portable mode everything stays beside the exe: `data\` holds settings, remembered devices, presets and logs, and `downloads\` and `screenshots\` hold saved files. The bundled adb and scrcpy are always used and are found relative to the exe, so the folder keeps working from a USB stick with any drive letter. Delete `portable.txt` to store settings in `%LocalAppData%` instead.
+In portable mode everything stays beside the exe:
+- `data\` holds settings, remembered devices, presets and logs
+- `downloads\` and `screenshots\` hold saved files
+- `platform-tools\` and `scrcpy\` hold adb and scrcpy once you let AdbFleet download them
 
-Pass `-SingleFile:$false` for a classic multi-file folder, or `-SkipTools` to leave out adb and scrcpy.
+Tools in the folder are found relative to the exe, so the folder keeps working from a USB stick with any drive letter. Rebuilding in place keeps these folders and leaves them out of the zip. Delete `portable.txt` to store settings in `%LocalAppData%` instead.
 
 ### Finding adb
 
@@ -75,9 +76,8 @@ The installed (non-portable) app finds `adb.exe` in this order:
 2. `platform-tools` next to the app or in `%LocalAppData%\AdbFleet`
 3. The Android SDK
 4. `PATH`
-5. An existing ADB AppControl folder in Downloads
 
-**Settings → Download latest platform-tools** fetches the official Google build. scrcpy is found the same way, or downloaded from its GitHub releases. Settings, logs and presets live in `%LocalAppData%\AdbFleet`.
+If none of these has it, AdbFleet asks on first launch. You can download Google's build or choose `adb.exe`, and you can change this later in Settings. scrcpy is found the same way, or downloaded from its GitHub releases. Settings, logs and presets live in `%LocalAppData%\AdbFleet`.
 
 ## Layout
 
@@ -86,7 +86,9 @@ AdbFleet/
   Models/      Device, AppInfo, LogEntry, ...
   Services/    AdbClient (process wrapper), DeviceService (device tracking),
                Batch (parallel multi-device runner), PackageOps, InstallOps,
-               DeviceOps, Downloader, Settings, LogService, Fleet (service hub)
-  Views/       Apps, Install, Tools, Console, Processes, Settings pages; Connect dialog
+               DeviceOps, InfoOps, ProxyOps, Downloader, Settings,
+               LogService, Fleet (service hub)
+  Views/       Overview, Apps, Install, Tools, Console, Processes, Settings pages;
+               Connect dialog, adb/scrcpy setup dialog
   MainWindow   title bar, device rail, target chips, navigation
 ```

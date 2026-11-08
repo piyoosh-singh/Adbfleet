@@ -91,7 +91,6 @@ public static class ToolLocator
     public static string? FindAdb()
     {
         if (_adbCache != null && File.Exists(_adbCache)) return _adbCache;
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
         var bundled = new[]
         {
@@ -104,15 +103,12 @@ public static class ToolLocator
         else { candidates.Add(Fleet.Settings.Value.AdbPath); candidates.AddRange(bundled); }
         candidates.Add(Path.Combine(local, "Android", "Sdk", "platform-tools", "adb.exe"));
         candidates.AddRange(PathDirs().Select(d => Path.Combine(d.Trim('"'), "adb.exe")));
-        // Reuse the adb shipped with ADB AppControl if it is still around.
-        candidates.Add(Path.Combine(home, "Downloads", "ADB_AppControl", "adb", "adb.exe"));
         _adbCache = candidates.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c) && File.Exists(c));
         return _adbCache;
     }
 
     public static string? FindScrcpy()
     {
-        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
         var bundled = new List<string>();
         foreach (var dir in new[] { Path.Combine(Fleet.AppDir, "scrcpy"), Path.Combine(Fleet.DataDir, "scrcpy") })
             if (Directory.Exists(dir))
@@ -121,7 +117,6 @@ public static class ToolLocator
         if (Fleet.IsPortable) { list.AddRange(bundled); list.Add(Fleet.Settings.Value.ScrcpyPath); }
         else { list.Add(Fleet.Settings.Value.ScrcpyPath); list.AddRange(bundled); }
         list.AddRange(PathDirs().Select(d => Path.Combine(d.Trim('"'), "scrcpy.exe")));
-        list.Add(Path.Combine(home, "Downloads", "ADB_AppControl", "scrcpy", "scrcpy.exe"));
         return list.FirstOrDefault(c => !string.IsNullOrWhiteSpace(c) && File.Exists(c));
     }
 }
